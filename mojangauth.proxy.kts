@@ -25,7 +25,7 @@ fun entry() {
     logger.info("[MS Auth] To show the GUI, please use the command 'mojang'")
 
     commands.register({ _ ->
-        logger.info("[Vanity Auth] Opening GUI...")
+        logger.info("[MS Auth] Opening GUI...")
 
         Constants.GUI_REFERENCE.get()?.close()
         Constants.GUI_REFERENCE.set(openGui())
