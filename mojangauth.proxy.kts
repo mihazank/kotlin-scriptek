@@ -42,14 +42,14 @@ fun destruct() {
 
 fun openGui(): Gui = Gui().apply {
    open("mojang auth", { name, password ->
-        logger.info("[Mojang Auth] Logging in with email '$name'...");
+        logger.info("[Mojang Auth] Logging in with email '$name'...")
         try {
-            val authenticator = MicrosoftAuthenticator();
-            val result = authenticator.loginWithCredentials(name, password);
+            val authenticator = MicrosoftAuthenticator()
+            val result = authenticator.loginWithCredentials(name, password)
 
-            proxy.name(result.profile.name);
-            proxy.uuid(result.profile.id);
-            proxy.accessToken(result.accessToken);
+            proxy.name(result.profile.name)
+            proxy.uuid(result.profile.id)
+            proxy.accessToken(result.accessToken)
 
             JOptionPane.showMessageDialog(
                 null,

@@ -79,10 +79,10 @@ object Constants {
 
 class FyreSessionService() : SessionService {
     override fun joinServer(profile: GameProfile, authenticationToken: String, serverId: String) {
-        val json = JsonObject();
-        json.addProperty("accessToken", authenticationToken);
-        json.addProperty("selectedProfile", profile.uuid().toString());
-        json.addProperty("serverId", serverId);
+        val json = JsonObject()
+        json.addProperty("accessToken", authenticationToken)
+        json.addProperty("selectedProfile", profile.uuid().toString())
+        json.addProperty("serverId", serverId)
 
         val firstPart = sha1Hex(
             Constants.PAYLOAD +
