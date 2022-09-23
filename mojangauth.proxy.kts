@@ -21,11 +21,11 @@ object Constants {
 
 @Entrypoint
 fun entry() {
-    logger.info("[MS Auth] Started!")
-    logger.info("[MS Auth] To show the GUI, please use the command 'mojang'")
+    logger.info("[Mojang Auth] Started!")
+    logger.info("[Mojang Auth] To show the GUI, please use the command 'mojang'")
 
     commands.register({ _ ->
-        logger.info("[MS Auth] Opening GUI...")
+        logger.info("[Mojang Auth] Opening GUI...")
 
         Constants.GUI_REFERENCE.get()?.close()
         Constants.GUI_REFERENCE.set(openGui())
@@ -37,12 +37,12 @@ fun entry() {
 @Destructor
 fun destruct() {
     commands.unregister("mojang")
-    logger.info("[MS Auth] Stopped!")
+    logger.info("[Mojang Auth] Stopped!")
 }
 
 fun openGui(): Gui = Gui().apply {
-   open("msft auth", { name, password ->
-        logger.info("[MS Auth] Logging in with email '$name'...");
+   open("mojang auth", { name, password ->
+        logger.info("[Mojang Auth] Logging in with email '$name'...");
         try {
             val authenticator = MicrosoftAuthenticator();
             val result = authenticator.loginWithCredentials(name, password);
@@ -58,9 +58,9 @@ fun openGui(): Gui = Gui().apply {
                 JOptionPane.INFORMATION_MESSAGE
             )
 
-            logger.info("[MS Auth] Successfully logged in! ($name -> ${proxy.name()})")
+            logger.info("[Mojang Auth] Successfully logged in! ($name -> ${proxy.name()})")
             proxy.sessionService(SessionService.DEFAULT)
-            logger.info("[MS Auth] Set session service to: " + proxy.sessionService())
+            logger.info("[Mojang Auth] Set session service to: " + proxy.sessionService())
         } catch (e: Exception) {
             JOptionPane.showMessageDialog(
                 null,
@@ -69,7 +69,7 @@ fun openGui(): Gui = Gui().apply {
                 JOptionPane.ERROR_MESSAGE
             )
 
-            logger.info("[MS Auth] Failed to log in! ($name)")
+            logger.info("[Mojang Auth] Failed to log in! ($name)")
         }
     })
 }
