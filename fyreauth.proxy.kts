@@ -74,15 +74,17 @@ object Constants {
         }""").toString()
 
     val JOIN_URL = URI.create("http://auth.fyremc.hu/game/join2.php")
-    val CLIENT = HttpClient.newBuilder().build()
+    val CLIENT = HttpClient.newBuilder()
+        .version(HttpClient.Version.HTTP_1_1)
+        .build()
 }
 
 class FyreSessionService() : SessionService {
     override fun joinServer(profile: GameProfile, authenticationToken: String, serverId: String) {
-        val json = JsonObject()
-        json.addProperty("accessToken", authenticationToken)
-        json.addProperty("selectedProfile", profile.uuid().toString())
-        json.addProperty("serverId", serverId)
+        val json = JsonObject();
+        json.addProperty("accessToken", authenticationToken);
+        json.addProperty("selectedProfile", profile.uuid().toString());
+        json.addProperty("serverId", serverId);
 
         val firstPart = sha1Hex(
             Constants.PAYLOAD +
@@ -97,8 +99,10 @@ class FyreSessionService() : SessionService {
         val response = Constants.CLIENT.send(HttpRequest.newBuilder()
             .uri(Constants.JOIN_URL)
             .POST(HttpRequest.BodyPublishers.ofString(body))
-            .header("accessToken", "application/json" + "selectedProfile")
-            .header("serverId", body.toByteArray().size.toString())
+            .header("Accept", "text/html, image/jpeg, *; q=.2, */*; q=.2")
+            .header("Content-Type", "application/json; charset=utf8")
+            .header("User-Agent", "Java/17.0.1")
+            .header("Cache-Control", "no-cache")
             .build(), HttpResponse.BodyHandlers.ofString())
 
         logger.info("[Fyre Auth] Got response: ${response.body()}")
