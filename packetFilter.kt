@@ -19,12 +19,12 @@ interface Validator {
 
     class PhaseValidator(phase: ProtocolPhase, vararg phases: ProtocolPhase, private val whitelist: Boolean = true): Validator {
         val set: EnumSet<ProtocolPhase> = EnumSet.of(phase, *phases)
-        override fun validate(type: PacketType): Boolean = !(set.contains(type.phase()) xor whitelist)
+        override fun validate(type: PacketType): Boolean = (set.contains(type.phase()) == whitelist)
     }
 
     class TypeValidator(type: PacketType, vararg types: PacketType, private val whitelist: Boolean = true): Validator {
         val set: Set<PacketType> = setOf(type, *types)
-        override fun validate(type: PacketType): Boolean = !(set.contains(type) xor whitelist)
+        override fun validate(type: PacketType): Boolean = (set.contains(type) == whitelist)
     }
 
     class DirectionValidator(private val direction: ProtocolDirection): Validator {
