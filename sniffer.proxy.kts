@@ -23,7 +23,7 @@ object Constants {
 object Sniffer : PacketListener {
     override fun priority(): Byte = 0
 
-    override fun handle(type: PacketType, buf: ByteBuf, ctx: ChannelHandlerContext, version: Version): Tristate {
+    override fun handle(type: PacketType, buf: ByteBuf, send: Channel, recv: ChannelHandlerContext, version: Version): Tristate {
         val prefix = if (type.direction() == ProtocolDirection.CLIENT) "C->S" else "S->C"
         if (Constants.VALIDATOR.validate(type)) {
             println("$prefix ${type.phase()}.$type -> ${ByteBufUtil.prettyHexDump(buf).replace(Constants.HEADER, "")}")
