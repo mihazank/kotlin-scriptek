@@ -31,26 +31,28 @@ object Rewriter : PacketListener {
 
     override fun handle(type: PacketType, buf: ByteBuf, send: Channel, recv: ChannelHandlerContext, version: Version): Tristate {
         if (type == PacketTypes.Play.Client.PLUGIN_MESSAGE) {
-            val channel = readString(buf)
+            IndexRollback.readerManual(buf).use {
+                val channel = readString(buf)
 
-            if (channel == "minecraft:brand") {
-                if (Constants.CLIENT_BRAND is Unit) {
-                    return Tristate.NOT_SET
-                } else if (Constants.CLIENT_BRAND is String) {
-                    val brand = readString(buf)
-
-                    if (brand == Constants.CLIENT_BRAND) {
+                if (channel == "minecraft:brand") {
+                    if (Constants.CLIENT_BRAND is Unit) {
                         return Tristate.NOT_SET
-                    } else {
-                        val rewritten = Unpooled.buffer()
-                        writeVarInt(buf, type.id(version))
-                        writeString(buf, channel)
-                        writeString(buf, Constants.CLIENT_BRAND)
-                        recv.writeAndFlush(rewritten)
+                    } else if (Constants.CLIENT_BRAND is String) {
+                        val brand = readString(buf)
+
+                        if (brand == Constants.CLIENT_BRAND) {
+                            return Tristate.NOT_SET
+                        } else {
+                            val rewritten = Unpooled.buffer()
+                            writeVarInt(buf, type.id(version))
+                            writeString(buf, channel)
+                            writeString(buf, Constants.CLIENT_BRAND)
+                            recv.writeAndFlush(rewritten)
+                            return Tristate.TRUE
+                        }
+                    } else if (Constants.CLIENT_BRAND == null) {
                         return Tristate.TRUE
                     }
-                } else if (Constants.CLIENT_BRAND == null) {
-                    return Tristate.TRUE
                 }
             }
         }
