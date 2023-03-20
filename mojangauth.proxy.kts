@@ -1,5 +1,5 @@
-@file:Repository("https://litarvan.github.io/maven")
-@file:DependsOn("fr.litarvan:openauth:1.1.3")
+@file:Repository("https://jitpack.io")
+@file:DependsOn("com.github.Litarvan:OpenAuth:v1.1.4")
 @file:Import("gui.kt")
 
 import me.marvin.proxy.utils.*
