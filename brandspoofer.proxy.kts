@@ -44,16 +44,19 @@ object Rewriter : PacketListener {
                         if (brand == Constants.CLIENT_BRAND) {
                             return Tristate.NOT_SET
                         } else {
+                            val content = Unpooled.buffer()
+                            writeString(content, Constants.CLIENT_BRAND)
+
                             val rewritten = Unpooled.buffer()
                             writeVarInt(rewritten, type.id(version))
                             writeString(rewritten, channel)
-                            writeString(rewritten, Constants.CLIENT_BRAND)
+                            rewritten.writeBytes(content)
+                            
                             recv.writeAndFlush(rewritten)
-                            buf.release()
+                            content.release()
                             return Tristate.TRUE
                         }
                     } else if (Constants.CLIENT_BRAND == null) {
-                        buf.release()
                         return Tristate.TRUE
                     }
                 }
