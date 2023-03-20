@@ -34,7 +34,7 @@ object Sink : PacketListener {
 @Entrypoint
 fun entry() {
     logger.info("[Sink] Started!")
-    logger.info("[Sink] Redirecting channels to sink: ${SINKED_CHNANELS.joinToString(separator = ",") { "'$it'"}}")
+    logger.info("[Sink] Redirecting channels to sink: ${Constants.SINKED_CHNANELS.joinToString(separator = ",") { "'$it'"}}")
     proxy.registerListeners(Sink)
 }
 
