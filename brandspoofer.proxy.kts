@@ -2,6 +2,7 @@ import me.marvin.proxy.utils.*
 
 import me.marvin.proxy.networking.*
 import me.marvin.proxy.networking.packet.*
+import me.marvin.proxy.utils.*
 import me.marvin.proxy.utils.ByteBufUtils.*
 
 import io.netty.buffer.*
