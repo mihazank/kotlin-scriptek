@@ -17,7 +17,7 @@ object Sink : PacketListener {
 
     override fun handle(type: PacketType, buf: ByteBuf, send: Channel, recv: ChannelHandlerContext, version: Version): Tristate {
         if (type == PacketTypes.Play.Client.PLUGIN_MESSAGE) {
-            IndexRollback.reader(buf).use {
+            IndexRollback.readerManual(buf).use {
                 val channel = readString(buf)
                 
                 if (Constants.SINKED_CHANNELS.contains(channel)) {
