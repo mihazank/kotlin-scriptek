@@ -9,7 +9,7 @@ import io.netty.channel.*
 import java.util.*
 
 object Constants {
-    val SINKED_CHANNELS = setOf("minecraft:register")
+    val SINKED_CHANNELS = setOf("minecraft:register", "minecraft:registerfabric")
 }
 
 object Sink : PacketListener {
