@@ -77,18 +77,20 @@ object Constants {
     val CLIENT = HttpClient.newBuilder()
         .version(HttpClient.Version.HTTP_1_1)
         .build()
+    val RANDOM_ID = "${Math.random()}".substring(2)
 }
 
 class FyreSessionService() : SessionService {
     override fun joinServer(profile: GameProfile, authenticationToken: String, serverId: String) {
-        val json = JsonObject();
-        json.addProperty("accessToken", authenticationToken);
-        json.addProperty("selectedProfile", profile.uuid().toString());
-        json.addProperty("serverId", serverId);
+        val json = JsonObject()
+        json.addProperty("accessToken", authenticationToken)
+        json.addProperty("selectedProfile", profile.uuid().toString())
+        json.addProperty("serverId", serverId + "." + Constants.RANDOM_ID.substring(Constants.RANDOM_ID.length - 2))
+        json.addProperty("selectedProfileId", Constants.RANDOM_ID)
 
         val firstPart = sha1Hex(
             Constants.PAYLOAD +
-            "ea022" +
+            "&`(Z#e6uKh)+)\\\\5q" +
             serverId.substring(1, 8) +
             profile.uuid().toString().substring(0, 4)
         ).substring(0, 39)
