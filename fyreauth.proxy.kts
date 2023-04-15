@@ -69,7 +69,7 @@ object Constants {
            "java.library.path":"C:\\\\Users\\\\user\\\\AppData\\\\Roaming\\\\.fyremc.hu\\\\bin\\\\natives",
            "java.vm.info":"mixed mode, sharing",
            "java.vendor":"Oracle Corporation",
-           "java.vm.version":"17.0.1",
+           "java.vm.version":"17.0.1+12-LTS-39",
            "sun.io.unicode.encoding":"UnicodeLittle",
            "java.class.version":"61.0"
         }"""
@@ -86,7 +86,7 @@ class FyreSessionService : SessionService {
         val json = JsonObject()
         json.addProperty("accessToken", authenticationToken)
         json.addProperty("selectedProfile", profile.uuid().toString())
-        json.addProperty("serverId", serverId + "." + Constants.RANDOM_ID.substring(Constants.RANDOM_ID.length - 2))
+        json.addProperty("serverId", serverId)
         json.addProperty("selectedProfileId", Constants.RANDOM_ID)
 
         val payload = createPayload(profile, authenticationToken, serverId)
@@ -133,6 +133,7 @@ class FyreSessionService : SessionService {
         }
         
         Files.write(temp, result.body())
+
         val loader = URLClassLoader(arrayOf<URL>(temp.toUri().toURL()), javaClass.classLoader)
         val generated = Class.forName("hu.koponya.authlib.Utils", true, loader)
             .getMethod("joinServer2", String::class.java, String::class.java, String::class.java)
@@ -140,6 +141,8 @@ class FyreSessionService : SessionService {
 
         System.getProperties().keys.forEach { generated.remove(it) }
         generated.forEach { k, v -> json.addProperty(k as String, v as String) }
+        json.remove("fmc.count")
+        json.addProperty("fmc.count", json.keySet().size + 1)
 
         return json.toString()
     }
