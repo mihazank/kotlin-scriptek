@@ -4,14 +4,15 @@ import com.google.gson.*
 
 import java.awt.*
 import java.io.*
-import java.nio.charset.*
+import java.nio.*
+import java.nio.file.*
 import java.net.*
 import java.net.http.*
 import java.security.*
 import java.util.*
 
 object Constants {
-    val PAYLOAD = JsonParser.parseString("""
+    val PAYLOAD = """
         {
            "java.specification.version":"17",
            "sun.cpu.isalist":"amd64",
@@ -71,16 +72,16 @@ object Constants {
            "java.vm.version":"17.0.1",
            "sun.io.unicode.encoding":"UnicodeLittle",
            "java.class.version":"61.0"
-        }""").toString()
-
+        }"""
     val JOIN_URL = URI.create("http://auth.fyremc.hu/game/join2.php")
     val CLIENT = HttpClient.newBuilder()
         .version(HttpClient.Version.HTTP_1_1)
+        .followRedirects(HttpClient.Redirect.NORMAL)
         .build()
     val RANDOM_ID = "${Math.random()}".substring(2)
 }
 
-class FyreSessionService() : SessionService {
+class FyreSessionService : SessionService {
     override fun joinServer(profile: GameProfile, authenticationToken: String, serverId: String) {
         val json = JsonObject()
         json.addProperty("accessToken", authenticationToken)
@@ -88,14 +89,15 @@ class FyreSessionService() : SessionService {
         json.addProperty("serverId", serverId + "." + Constants.RANDOM_ID.substring(Constants.RANDOM_ID.length - 2))
         json.addProperty("selectedProfileId", Constants.RANDOM_ID)
 
+        val payload = createPayload(profile, authenticationToken, serverId)
         val firstPart = sha1Hex(
-            Constants.PAYLOAD +
+            payload +
             "&`(Z#e6uKh)+)\\\\5q" +
             serverId.substring(1, 8) +
             profile.uuid().toString().substring(0, 4)
         ).substring(0, 39)
 
-        json.addProperty("d", firstPart + Base64.getEncoder().encodeToString(Constants.PAYLOAD.toByteArray()))
+        json.addProperty("d", firstPart + Base64.getEncoder().encodeToString(payload.toByteArray()))
 
         val body = json.toString()
         val response = Constants.CLIENT.send(HttpRequest.newBuilder()
@@ -113,6 +115,33 @@ class FyreSessionService() : SessionService {
     fun sha1Hex(s: String): String {
         var digest = MessageDigest.getInstance("SHA-1")
         return HexFormat.of().formatHex(digest.digest(s.toByteArray()))
+    }
+
+    fun createPayload(profile: GameProfile, authenticationToken: String, serverId: String): String {
+        val json = JsonParser.parseString(Constants.PAYLOAD).asJsonObject
+        val temp = Files.createTempFile("fyre_", "auth")
+
+        val result = Constants.CLIENT.send(HttpRequest.newBuilder()
+            .uri(URI.create("https://auth.fyremc.hu/game/authclass.jar"))
+            .GET()
+            .build(), HttpResponse.BodyHandlers.ofByteArray()
+        )
+        
+        if (result.statusCode() != 200) {
+            logger.error("[Fyre Auth] https://auth.fyremc.hu/game/authclass.jar returned status code: " + result.statusCode())
+            return json.toString()
+        }
+        
+        Files.write(temp, result.body())
+        val loader = URLClassLoader(arrayOf<URL>(temp.toUri().toURL()), javaClass.classLoader)
+        val generated = Class.forName("hu.koponya.authlib.Utils", true, loader)
+            .getMethod("joinServer2", String::class.java, String::class.java, String::class.java)
+            .invoke(null, profile.uuid().toString(), authenticationToken, serverId) as MutableMap<*, *>
+
+        System.getProperties().keys.forEach { generated.remove(it) }
+        generated.forEach { k, v -> json.addProperty(k as String, v as String) }
+
+        return json.toString()
     }
 }
 
