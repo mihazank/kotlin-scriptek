@@ -1,15 +1,27 @@
+@file:Repository("https://repo1.maven.org/maven2/")
+@file:DependsOn("org.javassist:javassist:3.29.2-GA")
+
 import me.marvin.proxy.utils.*
 
 import com.google.gson.*
+import javassist.ClassPool
+import me.marvin.scripting.kotlin.Destructor
+import me.marvin.scripting.kotlin.Entrypoint
+import me.marvin.scripting.kotlin.ProxyScriptConstants.commands
+import me.marvin.scripting.kotlin.ProxyScriptConstants.logger
+import me.marvin.scripting.kotlin.ProxyScriptConstants.proxy
+import java.io.File
+import java.io.InputStream
 
-import java.awt.*
-import java.io.*
-import java.nio.*
 import java.nio.file.*
 import java.net.*
 import java.net.http.*
 import java.security.*
 import java.util.*
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import kotlin.script.experimental.dependencies.DependsOn
+import kotlin.script.experimental.dependencies.Repository
 
 object Constants {
     val PAYLOAD = """
@@ -134,17 +146,50 @@ class FyreSessionService : SessionService {
         
         Files.write(temp, result.body())
 
-        val loader = URLClassLoader(arrayOf<URL>(temp.toUri().toURL()), javaClass.classLoader)
-        val generated = Class.forName("hu.koponya.authlib.Utils", true, loader)
-            .getMethod("joinServer2", String::class.java, String::class.java, String::class.java)
-            .invoke(null, profile.uuid().toString(), authenticationToken, serverId) as MutableMap<*, *>
+        val jarFile = JarFile(temp.toFile())
+        val generated = jarFile.stream().filter { it.name.endsWith(".class") }
+                .map { extractFmcValues(jarFile, it) }
+                .max { o1, o2 -> o1.size.compareTo(o2.size) }
+                .orElse(hashMapOf())
+        jarFile.close()
 
-        System.getProperties().keys.forEach { generated.remove(it) }
-        generated.forEach { k, v -> json.addProperty(k as String, v as String) }
-        json.remove("fmc.count")
+        logger.info("Got values: ${generated}")
+
+        generated.forEach { (k, v) -> json.addProperty(k, v) }
         json.addProperty("fmc.count", json.keySet().size + 1)
 
         return json.toString()
+    }
+
+    private fun extractFmcValues(jarFile: JarFile, entry: JarEntry): Map<String, String> {
+        val entryStream = jarFile.getInputStream(entry)
+        val ctClass = ClassPool.getDefault().makeClass(entryStream)
+        entryStream.close()
+
+        val foundPairs: MutableMap<String, String> = hashMapOf()
+
+        ctClass.methods.filter { it.returnType.simpleName == "Map" }
+                .map { it.methodInfo.constPool }
+                .forEach {
+                    var remember: String? = null
+
+                    for(i in 0 until it.size) {
+                        var constValueNullable: String?
+                        try {
+                            constValueNullable = it.getUtf8Info(i);
+                        } catch (_: Exception) { continue }
+
+                        val constValue: String = constValueNullable ?: continue
+
+                        if(constValue.startsWith("fmc.") && constValue != "fmc.count") {
+                            remember = constValue;
+                        } else if(remember != null) {
+                            foundPairs[remember] = constValue
+                        }
+                    }
+                }
+
+        return foundPairs;
     }
 }
 
